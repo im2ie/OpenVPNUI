@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+if [ "${3:-/}" = "/" ]; then
+    /bin/launchctl bootout system/com.local.openvpnui.helper 2>/dev/null || true
+fi
+exit 0

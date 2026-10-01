@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+task_target="${3:-/}"
+if [ "$task_target" != "/" ]; then exit 0; fi
+task_job="com.local.openvpnui.helper"
+/bin/launchctl bootout "system/$task_job" 2>/dev/null || true
+/usr/sbin/chown -R root:wheel "/Library/Application Support/OpenVPNUI Mac" "/Applications/OpenVPNUI Mac.app"
+/usr/sbin/chown root:wheel "/Library/PrivilegedHelperTools/$task_job" "/Library/LaunchDaemons/$task_job.plist"
+/bin/chmod 755 "/Library/PrivilegedHelperTools/$task_job"
+/bin/chmod 644 "/Library/LaunchDaemons/$task_job.plist"
+/bin/launchctl bootstrap system "/Library/LaunchDaemons/$task_job.plist"
+exit 0
