@@ -6,7 +6,7 @@ limitations are listed in README; this table does not certify interoperability w
 
 | Reference workflow | macOS implementation | Verification |
 |---|---|---|
-| Interface language | English default, optional Russian, persistent in-app selection | Catalog coverage, preferences, helper message and interpolation tests |
+| Interface language | English default, optional Ukrainian, persistent in-app selection | Catalog coverage, preferences and ru-to-uk migration, helper message and interpolation tests |
 | Connect, disconnect, cancel, credentials, errors | AppModel + helper management channel | Offline management tests; server pending |
 | Connection IP, interface, DNS, traffic, elapsed state | SessionStatus + ConnectionView | Byte counters tested; live tunnel pending |
 | Show/hide, copy/clear connection log | bounded root log + ConnectionView | Redaction/bounds tested |

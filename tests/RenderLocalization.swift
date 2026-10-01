@@ -13,7 +13,7 @@ import SwiftUI
         let model = AppModel(preview: true)
         let profile = Profile(id: "example", name: "Example VPN", configuration: "client\ndev tun\nremote vpn.example.test 1194\n", dnsRules: [], useSnapshotDNS: false)
         model.store.profiles = [profile]; model.selected = profile.id
-        model.helperAvailable = true; model.helperVersion = "0.2.2"
+        model.helperAvailable = true; model.helperVersion = "0.2.3"
         model.groups = ["admin", "staff"]; model.allowedGroups = ["admin"]
         model.interfaces = "utun0"
         model.statuses[profile.id] = SessionStatus(id: profile.id, state: "disconnected", message: "Disconnected")
@@ -53,15 +53,15 @@ import SwiftUI
         let live = NSHostingView(rootView: SettingsView(model: model))
         live.frame = NSRect(x: 0, y: 0, width: 760, height: 680); window.contentView = live
         RunLoop.main.run(until: Date().addingTimeInterval(0.2))
-        model.setLanguage(.russian)
+        model.setLanguage(.ukrainian)
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
         live.layoutSubtreeIfNeeded()
         if let bitmap = live.bitmapImageRepForCachingDisplay(in: live.bounds) {
             live.cacheDisplay(in: live.bounds, to: bitmap)
-            try bitmap.representation(using: .png, properties: [:])?.write(to: output.appendingPathComponent("live-switch-ru.png"))
+            try bitmap.representation(using: .png, properties: [:])?.write(to: output.appendingPathComponent("live-switch-uk.png"))
         }
         guard try encoder.encode(model.store) == original, model.statuses[profile.id]?.state == "disconnected" else { throw VPNError("Language change modified connection data") }
         window.orderOut(nil)
-        try Data("PASS: English/Russian screens rendered; live switch preserved profile and session data; helper access disabled\n".utf8).write(to: output.appendingPathComponent("result.txt"))
+        try Data("PASS: English/Ukrainian screens rendered; live switch preserved profile and session data; helper access disabled\n".utf8).write(to: output.appendingPathComponent("result.txt"))
     }
 }

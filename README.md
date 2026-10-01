@@ -1,13 +1,15 @@
-# OpenVPNUI Mac 0.2.2
+# OpenVPNUI Mac 0.2.3
+
+[Українською](README.uk.md)
 
 A native SwiftUI OpenVPN client for Intel Macs running macOS 26 or later.
-The interface defaults to English, with Russian available in settings. This is an independent macOS port of the
+The interface defaults to English, with Ukrainian available in settings. This is an independent macOS port of the
 workflows in [OpenVPNUI](https://github.com/esptl/OpenVPNUI), reference commit
 `091dd0afbed5e4ac6f7a644cf6aab81f76cef0d0`.
 
 ## Install
 
-Download [OpenVPNUI-Mac-Intel-0.2.2.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.2/OpenVPNUI-Mac-Intel-0.2.2.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.2). It installs the application, a launchd helper,
+Download [OpenVPNUI-Mac-Intel-0.2.3.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.3/OpenVPNUI-Mac-Intel-0.2.3.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.3). It installs the application, a launchd helper,
 and a bundled OpenVPN engine. Homebrew is not required to run the application.
 Installation requires administrator authorization and restarts the helper, which
 interrupts any tunnels managed by a previous version. Existing user profiles are
@@ -19,7 +21,7 @@ not signed with a Developer ID Installer certificate or notarized by Apple.
 
 ## Features
 
-- English by default; saved English/Russian selection under **Settings and service → General → Language**.
+- English by default; saved English/Ukrainian selection under **Settings and service → General → Language**.
 - Multiple profiles and tunnels, menu bar controls, credentials and retry,
   traffic counters, connection phases, and an in-memory redacted log.
 - `.openvpn` ZIP/XML and `.ovpn`/`.conf` import/export, profile editing, CA and
@@ -51,15 +53,16 @@ user-supplied material; a DNS snapshot must be assigned to profiles explicitly.
 ### Interface language
 
 English is used on first launch and when upgrading a version without a language
-preference, regardless of the Mac's language. Choose **Русский** under
-**Settings and service → General → Language** to switch to Russian, or choose
-**English** to switch back. The selection is saved on this Mac. App screens,
+preference, regardless of the Mac's language. Choose **Українська** under
+**Settings and service → General → Language** to switch to Ukrainian, or choose
+**English** to switch back. The selection is saved on this Mac. A Russian choice saved by version 0.2.2
+is migrated to Ukrainian automatically. App screens,
 dialogs, connection messages, notifications and menu bar controls update without
 disconnecting tunnels. Some system-provided macOS menus and dialogs use the new
 language after restarting the app.
 
 Profile names, configuration text, server authentication challenges and raw
-OpenVPN logs are preserved verbatim. English keys and Russian translations are in
+OpenVPN logs are preserved verbatim. English keys and Ukrainian translations are in
 `Translations.swift`; language preferences and message rendering are in
 `Localization.swift`. The helper protocol remains independent of the UI language.
 
@@ -134,8 +137,9 @@ These checks do not establish compatibility with every server, MFA flow, DNS
 policy, sleep/wake scenario or macOS authorization dialog. See `VALIDATION.json`
 for the prepared release's actual checks and remaining limits.
 
-Version 0.2.2 adds English as the default interface language, optional Russian,
-and persistent language selection. Offline tests cover default/fallback language,
+Version 0.2.3 replaces the Russian option with Ukrainian while keeping English
+as the default. A saved Russian preference from 0.2.2 migrates to Ukrainian; an
+existing English preference stays English. Offline tests cover default/fallback language,
 preference persistence, helper message translation, safe placeholders and complete
 translation coverage. Version 0.2.1 fixed delayed log output, preserved the original
 shutdown error, and added connection phase and reconnect reason reporting.

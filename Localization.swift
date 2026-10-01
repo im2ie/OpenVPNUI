@@ -1,9 +1,9 @@
 import Foundation
 
 enum AppLanguage: String, CaseIterable, Identifiable {
-    case english = "en", russian = "ru"
+    case english = "en", ukrainian = "uk"
     var id: String { rawValue }
-    var name: String { self == .english ? "English" : "Русский" }
+    var name: String { self == .english ? "English" : "Українська" }
     var locale: Locale { Locale(identifier: rawValue) }
 }
 
@@ -18,7 +18,10 @@ enum Localization {
 
     // This app's preference is independent of the Mac's language and profile data.
     static func savedLanguage(in defaults: UserDefaults = .standard) -> AppLanguage {
-        defaults.string(forKey: preferenceKey).flatMap(AppLanguage.init(rawValue:)) ?? .english
+        let saved = defaults.string(forKey: preferenceKey)
+        // Ukrainian replaces the Russian option offered by version 0.2.2.
+        if saved == "ru" { return .ukrainian }
+        return saved.flatMap(AppLanguage.init(rawValue:)) ?? .english
     }
     static func select(_ value: AppLanguage, defaults: UserDefaults = .standard) {
         language = value
@@ -39,7 +42,7 @@ enum Localization {
         return result
     }
     static func text(_ key: String, arguments: [String] = [], language: AppLanguage? = nil) -> String {
-        let template = (language ?? self.language) == .russian ? russianTranslations[key] ?? key : key
+        let template = (language ?? self.language) == .ukrainian ? ukrainianTranslations[key] ?? key : key
         return format(template, arguments: arguments)
     }
 
@@ -68,16 +71,16 @@ enum Localization {
             return args
         }
     }
-    private static let reverse = Dictionary(russianTranslations.map { ($0.value, $0.key) }, uniquingKeysWith: { first, _ in first })
-    private static let patterns: [MessagePattern] = russianTranslations.keys.filter { $0.contains("{0}") }.sorted { $0.count > $1.count }.flatMap { key in
-        [MessagePattern(key: key, template: key), MessagePattern(key: key, template: russianTranslations[key]!)]
+    private static let reverse = Dictionary(ukrainianTranslations.map { ($0.value, $0.key) }, uniquingKeysWith: { first, _ in first })
+    private static let patterns: [MessagePattern] = ukrainianTranslations.keys.filter { $0.contains("{0}") }.sorted { $0.count > $1.count }.flatMap { key in
+        [MessagePattern(key: key, template: key), MessagePattern(key: key, template: ukrainianTranslations[key]!)]
     }
 
     // The helper's wire messages stay in English. Render owned messages at the UI
-    // boundary, including Russian messages from older helpers during an upgrade.
+    // boundary using the selected English or Ukrainian catalog.
     // Server challenges, log lines and user-supplied profile data remain verbatim.
     static func message(_ value: String) -> String {
-        if russianTranslations[value] != nil { return text(value) }
+        if ukrainianTranslations[value] != nil { return text(value) }
         if let key = reverse[value] { return text(key) }
         for pattern in patterns {
             if let arguments = pattern.arguments(in: value) { return text(pattern.key, arguments: arguments) }

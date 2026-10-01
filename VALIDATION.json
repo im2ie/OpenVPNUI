@@ -1,9 +1,9 @@
 {
-  "version": "0.2.2",
+  "version": "0.2.3",
   "architecture": "x86_64",
   "minimum_macos": "26.0",
   "checks_passed": [
-    "English default bundle metadata and complete English/Russian translation catalog",
+    "English default bundle metadata and complete English/Ukrainian translation catalog",
     "App bundle and nested code signatures verify",
     "GUI, helper, engine, certificate tool, CLI and provider are x86_64 with bundled/system dependencies",
     "Packaged engine and CLI run offline",
@@ -16,12 +16,12 @@
     "Management authentication, proxy separation, password retention, traffic and bounded redacted logs",
     "Short log lines arrive before process termination; original shutdown reason preserved; connection phases displayed",
     "Missing administrator authorization rejected",
-    "English default independent of macOS language; saved English/Russian choice and fallback",
-    "Live helper status/error localization, old helper compatibility and safe interpolation"
+    "English default independent of macOS language; saved English/Ukrainian choice and fallback",
+    "Live helper status/error localization, saved-language migration and safe interpolation"
   ],
   "not_verified": [
     "Rebuilding OpenSSL/LZO/LZ4 through scripts/build_dependencies.sh",
-    "Visual English/Russian screen rendering: LaunchServices refused the preview app with kLSNoExecutableErr in the automation environment",
+    "Visual English/Ukrainian screen rendering; not rerun because preview launch was unavailable in the automation environment",
     "All native GUI controls and macOS authorization dialogs in the prepared package",
     "Interoperability with arbitrary VPN servers, MFA and DNS policies",
     "Sleep/wake, failover and network recovery with live tunnels"

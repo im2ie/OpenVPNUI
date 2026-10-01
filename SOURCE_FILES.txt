@@ -12,7 +12,7 @@ LICENSE
 Localization.swift
 LocalizationTests.swift
 README.md
-README.ru.md
+README.uk.md
 RELEASE_NOTES.md
 SOURCE_FILES.txt
 Shared.swift
