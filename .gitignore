@@ -17,3 +17,7 @@ __pycache__/
 profiles*.json
 mac-profiles.json
 .env
+
+# Audited, versioned release binaries are explicitly published.
+!release-assets/**/*.pkg
+!release-assets/**/*.app.zip

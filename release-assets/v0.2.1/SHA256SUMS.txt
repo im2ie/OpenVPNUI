@@ -1,0 +1,3 @@
+2253997f5045e1f17615eab9e55896ceb6281a7ce748aaa3b59607c743fe9dab  OpenVPNUI-Mac-0.2.1-Sources.zip
+2a21c4612bc8bd6aa50dcdbf609b700d95638e6f2588e27d4d3217543d854cfd  OpenVPNUI-Mac-Intel-0.2.1.app.zip
+a9eda8cb2190166793fbbdbe9a591d627ed93e15530fc0ff9db4075dec25c0f9  OpenVPNUI-Mac-Intel-0.2.1.pkg

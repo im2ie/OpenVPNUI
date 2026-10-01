@@ -7,7 +7,7 @@ workflows in [OpenVPNUI](https://github.com/esptl/OpenVPNUI), reference commit
 
 ## Install
 
-Use `OpenVPNUI-Mac-Intel-0.2.1.pkg`. It installs the application, a launchd helper,
+Download [OpenVPNUI-Mac-Intel-0.2.1.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.1/OpenVPNUI-Mac-Intel-0.2.1.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.1). It installs the application, a launchd helper,
 and a bundled OpenVPN engine. Homebrew is not required to run the application.
 Installation requires administrator authorization and restarts the helper, which
 interrupts any tunnels managed by a previous version. Existing user profiles are
@@ -117,3 +117,12 @@ and displays the actual OpenVPN connection phase and reconnect reason.
 
 License texts and provenance are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
 [LICENSE](LICENSE), `licenses/`, and the unchanged upstream archives.
+
+## Release publication
+
+The tag workflow publishes the checked installer and app ZIP from `release-assets/`,
+creates a deterministic complete source ZIP from `SOURCE_FILES.txt`, verifies all
+three files against the committed SHA256 manifest, and publishes the release only
+after GitHub confirms the uploaded asset digests. It uses the temporary token for
+this repository supplied by GitHub Actions; no personal token or SSH key is stored
+in the project. Release automation is in `.github/workflows/release.yml`.
