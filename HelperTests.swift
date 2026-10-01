@@ -38,7 +38,7 @@ func check(_ value: Bool, _ message: String) throws { if !value { throw VPNError
         try check(session.status.bytesIn == 2048 && session.status.bytesOut == 4096 && (session.status.rateIn ?? 0) > 900, "Traffic statistics")
         session.status.challenge = nil
         session.handle(">STATE:123,WAIT,,,,,,")
-        try check(session.status.message == "Ожидание ответа VPN-сервера", "Show the current connection phase")
+        try check(session.status.message == "Waiting for the VPN server to respond", "Show the current connection phase")
         session.handle(">STATE:124,RECONNECTING,tls-error,,,,,")
         try check(session.status.message.contains("tls-error"), "Show the reconnect reason")
         let liveLog = Session(profile: profile, uid: getuid())
@@ -48,10 +48,10 @@ func check(_ value: Bool, _ message: String) throws { if !value { throw VPNError
         let logDeadline = Date().addingTimeInterval(2)
         while withLock({ liveLog.log.isEmpty }) && Date() < logDeadline { Thread.sleep(forTimeInterval: 0.01) }
         try check(withLock({ liveLog.log.first == "TLS Error: key negotiation failed" }), "Short log lines must arrive while OpenVPN is still running")
-        session.canceled = true; session.failureMessage = "Split DNS не настроен"; session.status.state = "disconnecting"
-        session.stop(failure: "Не удалось управлять OpenVPN")
+        session.canceled = true; session.failureMessage = "Split DNS is not configured"; session.status.state = "disconnecting"
+        session.stop(failure: "Could not control OpenVPN")
         session.handle(">STATE:125,WAIT,,,,,,")
-        try check(session.failureMessage == "Split DNS не настроен" && session.status.state == "disconnecting", "Expected shutdown must preserve the original failure and state")
+        try check(session.failureMessage == "Split DNS is not configured" && session.status.state == "disconnecting", "Expected shutdown must preserve the original failure and state")
         session.receiveOutput(Data("line with retained-secret\nAUTH_FAILED\n".utf8))
         try check(!session.log.joined().contains("retained-secret") && session.status.errorCode == "Password", "Logs redact auth and classify errors")
         for _ in 0..<2100 { session.appendLog(String(repeating: "x", count: 512)) }

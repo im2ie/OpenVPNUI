@@ -9,7 +9,7 @@ let runtimeRoot = "/var/run/openvpnui-mac"
 struct VPNError: Error, LocalizedError {
     let text: String
     init(_ text: String) { self.text = text }
-    var errorDescription: String? { text }
+    var errorDescription: String? { Localization.message(text) }
 }
 struct DNSRule: Codable, Equatable {
     var domains: [String]
@@ -47,7 +47,7 @@ struct ProfileStore: Codable {
 enum SavePolicy: String, Codable, CaseIterable, Identifiable {
     case none = "None", session = "Session", persistent = "Persistent", choose = "Both"
     var id: String { rawValue }
-    var title: String { switch self { case .none: return "Не сохранять"; case .session: return "На время сеанса"; case .persistent: return "В Связке ключей"; case .choose: return "Спрашивать при входе" } }
+    var title: String { switch self { case .none: return L("Do not save"); case .session: return L("For this session"); case .persistent: return L("In Keychain"); case .choose: return L("Ask when signing in") } }
 }
 struct ProfileSettings: Codable, Equatable {
     var autoStart = false
@@ -128,6 +128,7 @@ struct SessionStatus: Codable, Identifiable {
     var rateOut: Double?
     var errorCode: String?
     var challengeText: String?
+    var localizedMessage: String { Localization.message(message) }
 }
 struct Response: Codable {
     var ok: Bool
@@ -143,9 +144,9 @@ struct Response: Codable {
 func logLineRedacted(_ text: String, secrets: [String] = []) -> String {
     var line = String(text.prefix(8192))
     let lowered = line.lowercased()
-    if lowered.contains("-----begin") && lowered.contains("private key") { return "[Закрытый ключ скрыт]" }
-    if ["auth_token", "auth-token", "password '", "password=", "password:", ">password:", "pkcs12_password"].contains(where: { lowered.contains($0) }) { return "[Событие авторизации: секретные данные скрыты]" }
-    for secret in secrets where !secret.isEmpty { line = line.replacingOccurrences(of: secret, with: "[скрыто]") }
+    if lowered.contains("-----begin") && lowered.contains("private key") { return "[Private key redacted]" }
+    if ["auth_token", "auth-token", "password '", "password=", "password:", ">password:", "pkcs12_password"].contains(where: { lowered.contains($0) }) { return "[Authentication event: secrets redacted]" }
+    for secret in secrets where !secret.isEmpty { line = line.replacingOccurrences(of: secret, with: "[redacted]") }
     return line
 }
 
@@ -253,7 +254,7 @@ func connectUnix(_ path: String) throws -> Int32 {
     }
     address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
     let connected = withUnsafePointer(to: &address) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) } }
-    guard connected == 0 else { close(fd); throw VPNError("Системный помощник не установлен или не запущен. Установите пакет .pkg.") }
+    guard connected == 0 else { close(fd); throw VPNError("The system helper is not installed or running. Install the .pkg package.") }
     var timeout = timeval(tv_sec: 5, tv_usec: 0)
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))

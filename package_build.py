@@ -19,7 +19,7 @@ shutil.copy2(build/'p12tool', resources/'p12tool')
 shutil.copy2(build/'openvpnuictl', resources/'openvpnuictl')
 shutil.copytree(build/'legacy', resources/'legacy')
 with (app/'Contents/Info.plist').open('wb') as f:
-    plistlib.dump({'CFBundleIdentifier':'com.local.openvpnui.mac','CFBundleName':'OpenVPNUI Mac','CFBundleDisplayName':'OpenVPNUI Mac','CFBundleExecutable':'OpenVPNUIMac','CFBundlePackageType':'APPL','CFBundleShortVersionString':'0.2.1','CFBundleVersion':'3','LSMinimumSystemVersion':'26.0','NSHighResolutionCapable':True,'CFBundleIconFile':'AppIcon','CFBundleURLTypes':[{'CFBundleURLName':'OpenVPNUI Connection','CFBundleURLSchemes':['openvpnui']}],'CFBundleDocumentTypes':[{'CFBundleTypeName':'OpenVPN profile','CFBundleTypeRole':'Editor','CFBundleTypeExtensions':['openvpn','ovpn','conf','connection']}]}, f)
+    plistlib.dump({'CFBundleIdentifier':'com.local.openvpnui.mac','CFBundleName':'OpenVPNUI Mac','CFBundleDisplayName':'OpenVPNUI Mac','CFBundleExecutable':'OpenVPNUIMac','CFBundlePackageType':'APPL','CFBundleShortVersionString':'0.2.2','CFBundleVersion':'4','CFBundleDevelopmentRegion':'en','CFBundleLocalizations':['en','ru'],'LSMinimumSystemVersion':'26.0','NSHighResolutionCapable':True,'CFBundleIconFile':'AppIcon','CFBundleURLTypes':[{'CFBundleURLName':'OpenVPNUI Connection','CFBundleURLSchemes':['openvpnui']}],'CFBundleDocumentTypes':[{'CFBundleTypeName':'OpenVPN profile','CFBundleTypeRole':'Editor','CFBundleTypeExtensions':['openvpn','ovpn','conf','connection']}]}, f)
 icon = root/'resources/AppIcon.icns'
 if icon.exists(): shutil.copy2(icon, resources/'AppIcon.icns')
 engine = stage/'Library/Application Support/OpenVPNUI Mac/Engine'
@@ -45,12 +45,12 @@ for path in [engine/'openvpn',helper,resources/'legacy/libcrypto.3.dylib',resour
     subprocess.run(['codesign','--force','--sign','-','--timestamp=none',str(path)],check=True,capture_output=True)
 subprocess.run(['codesign','--force','--sign','-','--timestamp=none',str(app)],check=True,capture_output=True)
 # Output is an explicit, separate directory.
-subprocess.run(['ditto','--norsrc','--noextattr','-c','-k','--keepParent',str(app),str(out/'OpenVPNUI-Mac-Intel-0.2.1.app.zip')],check=True)
+subprocess.run(['ditto','--norsrc','--noextattr','-c','-k','--keepParent',str(app),str(out/'OpenVPNUI-Mac-Intel-0.2.2.app.zip')],check=True)
 components = stage.parent/(stage.name+'-components.plist')
 with components.open('wb') as f: plistlib.dump([{'RootRelativeBundlePath':'Applications/OpenVPNUI Mac.app','BundleIsRelocatable':False,'BundleHasStrictIdentifier':True,'BundleIsVersionChecked':True,'BundleOverwriteAction':'upgrade'}],f)
-subprocess.run(['pkgbuild','--root',str(stage),'--component-plist',str(components),'--scripts',str(root/'packaging'),'--identifier','com.local.openvpnui.mac.installer','--version','0.2.1','--install-location','/','--ownership','recommended',str(out/'OpenVPNUI-Mac-Intel-0.2.1.pkg')],check=True)
+subprocess.run(['pkgbuild','--root',str(stage),'--component-plist',str(components),'--scripts',str(root/'packaging'),'--identifier','com.local.openvpnui.mac.installer','--version','0.2.2','--install-location','/','--ownership','recommended',str(out/'OpenVPNUI-Mac-Intel-0.2.2.pkg')],check=True)
 from scripts.archive_sources import archive_sources
-archive_sources(root, out/'OpenVPNUI-Mac-0.2.1-Sources.zip')
+archive_sources(root, out/'OpenVPNUI-Mac-0.2.2-Sources.zip')
 components.unlink()
 print('Created app, installer and sources; no corporate certificates or profile secrets included.')
 shutil.rmtree(stage)

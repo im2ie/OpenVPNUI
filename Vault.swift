@@ -6,25 +6,25 @@ enum Vault {
     static func read(_ account: String, service: String = service) throws -> String {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
         var result: CFTypeRef?; let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess, let data = result as? Data, let text = String(data: data, encoding: .utf8) else { throw VPNError("Пароль не найден в Связке ключей (\(status))") }; return text
+        guard status == errSecSuccess, let data = result as? Data, let text = String(data: data, encoding: .utf8) else { throw VPNError("Password not found in Keychain (\(status))") }; return text
     }
     static func save(_ text: String, account: String) throws {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
         let attributes: [String: Any] = [kSecValueData as String: Data(text.utf8), kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly]
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-        if status == errSecItemNotFound { var add = query; attributes.forEach { add[$0] = $1 }; guard SecItemAdd(add as CFDictionary, nil) == errSecSuccess else { throw VPNError("Не удалось сохранить пароль в Связке ключей") } }
-        else if status != errSecSuccess { throw VPNError("Не удалось обновить пароль (\(status))") }
+        if status == errSecItemNotFound { var add = query; attributes.forEach { add[$0] = $1 }; guard SecItemAdd(add as CFDictionary, nil) == errSecSuccess else { throw VPNError("Could not save the password in Keychain") } }
+        else if status != errSecSuccess { throw VPNError("Could not update the password (\(status))") }
     }
     static func remove(_ account: String) { SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account] as CFDictionary) }
     static func randomPassword() throws -> String {
-        var data = [UInt8](repeating: 0, count: 48); guard SecRandomCopyBytes(kSecRandomDefault, data.count, &data) == errSecSuccess else { throw VPNError("Генератор случайных чисел недоступен") }; return Data(data).base64EncodedString()
+        var data = [UInt8](repeating: 0, count: 48); guard SecRandomCopyBytes(kSecRandomDefault, data.count, &data) == errSecSuccess else { throw VPNError("The random number generator is unavailable") }; return Data(data).base64EncodedString()
     }
 }
 struct LoginCredentials: Codable { var username: String; var password: String }
 
 func administratorAuthorization() throws -> Data {
     var authorization: AuthorizationRef?
-    guard AuthorizationCreate(nil, nil, [], &authorization) == errAuthorizationSuccess, let authorization else { throw VPNError("Не удалось запросить права администратора") }
+    guard AuthorizationCreate(nil, nil, [], &authorization) == errAuthorizationSuccess, let authorization else { throw VPNError("Could not request administrator privileges") }
     defer { AuthorizationFree(authorization, []) }
     let status: OSStatus = "system.privilege.admin".withCString { name in
         var item = AuthorizationItem(name: name, valueLength: 0, value: nil, flags: 0)
@@ -33,8 +33,8 @@ func administratorAuthorization() throws -> Data {
             return AuthorizationCopyRights(authorization, &rights, nil, [.interactionAllowed, .extendRights, .preAuthorize], nil)
         }
     }
-    guard status == errAuthorizationSuccess else { throw VPNError("Права администратора не получены (\(status))") }
-    var external = AuthorizationExternalForm(); guard AuthorizationMakeExternalForm(authorization, &external) == errAuthorizationSuccess else { throw VPNError("Не удалось передать авторизацию помощнику") }
+    guard status == errAuthorizationSuccess else { throw VPNError("Administrator privileges were not granted (\(status))") }
+    var external = AuthorizationExternalForm(); guard AuthorizationMakeExternalForm(authorization, &external) == errAuthorizationSuccess else { throw VPNError("Could not pass authorization to the helper") }
     return withUnsafeBytes(of: external) { Data($0) }
 }
 func verifyAdministratorAuthorization(_ data: Data?) throws {

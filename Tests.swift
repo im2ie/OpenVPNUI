@@ -6,6 +6,7 @@ func rejects(_ block: () throws -> Void, _ name: String) throws {
 }
 @main struct Tests {
     static func main() throws {
+        try testLocalization()
         let base = """
         client
         remote-cert-tls server

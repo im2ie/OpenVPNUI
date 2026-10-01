@@ -1,13 +1,13 @@
-# OpenVPNUI Mac 0.2.1
+# OpenVPNUI Mac 0.2.2
 
 A native SwiftUI OpenVPN client for Intel Macs running macOS 26 or later.
-The interface is currently in Russian. This is an independent macOS port of the
+The interface defaults to English, with Russian available in settings. This is an independent macOS port of the
 workflows in [OpenVPNUI](https://github.com/esptl/OpenVPNUI), reference commit
 `091dd0afbed5e4ac6f7a644cf6aab81f76cef0d0`.
 
 ## Install
 
-Download [OpenVPNUI-Mac-Intel-0.2.1.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.1/OpenVPNUI-Mac-Intel-0.2.1.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.1). It installs the application, a launchd helper,
+Download [OpenVPNUI-Mac-Intel-0.2.2.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.2/OpenVPNUI-Mac-Intel-0.2.2.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.2). It installs the application, a launchd helper,
 and a bundled OpenVPN engine. Homebrew is not required to run the application.
 Installation requires administrator authorization and restarts the helper, which
 interrupts any tunnels managed by a previous version. Existing user profiles are
@@ -19,6 +19,7 @@ not signed with a Developer ID Installer certificate or notarized by Apple.
 
 ## Features
 
+- English by default; saved English/Russian selection under **Settings and service → General → Language**.
 - Multiple profiles and tunnels, menu bar controls, credentials and retry,
   traffic counters, connection phases, and an in-memory redacted log.
 - `.openvpn` ZIP/XML and `.ovpn`/`.conf` import/export, profile editing, CA and
@@ -35,8 +36,7 @@ See [FEATURES.md](FEATURES.md) for the reference workflow mapping.
 
 ### DNS
 
-The profile option **“Считать подключение успешным только при настроенном Split
-DNS”** requires at least one valid split DNS rule before a connection is considered
+The profile option **“Require configured Split DNS for a successful connection”** requires at least one valid split DNS rule before a connection is considered
 successful. It defaults to enabled. Supply scoped DNS servers and domains through
 server PUSH or explicit profile rules. Search domains alone do not supply a DNS server.
 Disable that requirement if your deployment intentionally does not need VPN DNS.
@@ -47,6 +47,23 @@ policies are not supported. The optional Windows migration utility imports only
 user-supplied material; a DNS snapshot must be assigned to profiles explicitly.
 
 ## Source and build
+
+### Interface language
+
+English is used on first launch and when upgrading a version without a language
+preference, regardless of the Mac's language. Choose **Русский** under
+**Settings and service → General → Language** to switch to Russian, or choose
+**English** to switch back. The selection is saved on this Mac. App screens,
+dialogs, connection messages, notifications and menu bar controls update without
+disconnecting tunnels. Some system-provided macOS menus and dialogs use the new
+language after restarting the app.
+
+Profile names, configuration text, server authentication challenges and raw
+OpenVPN logs are preserved verbatim. English keys and Russian translations are in
+`Translations.swift`; language preferences and message rendering are in
+`Localization.swift`. The helper protocol remains independent of the UI language.
+
+### Build
 
 This source distribution includes all native application/helper/tool sources,
 offline tests, packaging scripts, icons, licenses and the source archives for
@@ -77,6 +94,11 @@ python3 tests/validate_crypto.py build/p12tool
 python3 package_build.py
 python3 scripts/validate_release.py
 ```
+
+For an offline visual check of both languages, run
+`bash scripts/render_localizations.sh`. It briefly opens a preview application
+and saves screenshots under `build/localization-preview/`. The preview uses
+synthetic data and disables helper requests, so it cannot start VPN connections.
 
 With the exact versions already installed under `/usr/local/opt/openssl@3`,
 `/usr/local/opt/lzo`, and `/usr/local/opt/lz4`, the three environment variables are
@@ -112,8 +134,11 @@ These checks do not establish compatibility with every server, MFA flow, DNS
 policy, sleep/wake scenario or macOS authorization dialog. See `VALIDATION.json`
 for the prepared release's actual checks and remaining limits.
 
-Version 0.2.1 fixes delayed log output and loss of the original shutdown error,
-and displays the actual OpenVPN connection phase and reconnect reason.
+Version 0.2.2 adds English as the default interface language, optional Russian,
+and persistent language selection. Offline tests cover default/fallback language,
+preference persistence, helper message translation, safe placeholders and complete
+translation coverage. Version 0.2.1 fixed delayed log output, preserved the original
+shutdown error, and added connection phase and reconnect reason reporting.
 
 License texts and provenance are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
 [LICENSE](LICENSE), `licenses/`, and the unchanged upstream archives.

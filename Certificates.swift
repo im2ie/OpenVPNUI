@@ -6,11 +6,11 @@ struct CertificateManager {
     func identity(_ id: String) -> URL { root.appendingPathComponent("identities/" + id + ".p12") }
     func pendingKey(_ id: String) -> URL { root.appendingPathComponent("requests/" + id + ".key") }
     func call(_ args: [String], passwords: [String] = []) throws -> Data {
-        guard passwords.allSatisfy({ $0.utf8.count <= 4096 && !$0.contains("\n") && !$0.contains("\r") && !$0.contains("\0") }) else { throw VPNError("Недопустимые символы в пароле") }
+        guard passwords.allSatisfy({ $0.utf8.count <= 4096 && !$0.contains("\n") && !$0.contains("\r") && !$0.contains("\0") }) else { throw VPNError("Invalid characters in password") }
         let result = try runTool(tool, args, input: Data((passwords.joined(separator: "\n") + "\n").utf8), timeout: 120)
         guard result.status == 0 else {
-            let messages: [Int32: String] = [4: "Новый пароль должен содержать не менее 8 символов", 5: "Не удалось прочитать сертификат", 6: "Неверный пароль или формат закрытого ключа", 9: "Не удалось создать файл", 12: "Проверьте поля запроса сертификата", 16: "Сертификат не подходит к CA профиля или истёк", 17: "Ответ CA не соответствует закрытому ключу"]
-            throw VPNError(messages[result.status] ?? "Ошибка обработки сертификата (\(result.status))")
+            let messages: [Int32: String] = [4: "The new password must contain at least 8 characters", 5: "Could not read the certificate", 6: "Incorrect password or private key format", 9: "Could not create the file", 12: "Check the certificate request fields", 16: "The certificate does not match the profile CA or has expired", 17: "The CA response does not match the private key"]
+            throw VPNError(messages[result.status] ?? "Certificate processing failed (\(result.status))")
         }
         return result.output
     }
@@ -35,7 +35,7 @@ struct CertificateManager {
         try importIdentity(identity(record.id), password: old, newPassword: new)
     }
     func createRequest(fields: [String], algorithm: String) throws -> EnrollmentRecord {
-        guard fields.count == 7, !fields[0].isEmpty, fields[5].count == 2 else { throw VPNError("Укажите имя и двухбуквенный код страны") }
+        guard fields.count == 7, !fields[0].isEmpty, fields[5].count == 2 else { throw VPNError("Enter a name and a two-letter country code") }
         let id = UUID().uuidString.lowercased(), pass = try Vault.randomPassword(); let key = pendingKey(id)
         let csr = root.appendingPathComponent("requests/" + id + ".csr")
         try FileManager.default.createDirectory(at: key.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])

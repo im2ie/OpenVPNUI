@@ -19,5 +19,5 @@ def archive_sources(root, output):
 
 if __name__=='__main__':
     root=Path(__file__).resolve().parents[1]
-    destination=Path(sys.argv[1]) if len(sys.argv)>1 else root/'dist/OpenVPNUI-Mac-0.2.1-Sources.zip'
+    destination=Path(sys.argv[1]) if len(sys.argv)>1 else root/'dist/OpenVPNUI-Mac-0.2.2-Sources.zip'
     print(archive_sources(root,destination)+'  '+destination.name)

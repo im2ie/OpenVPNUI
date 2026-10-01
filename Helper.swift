@@ -97,7 +97,7 @@ final class Session {
         }
     }
     var directory: String { runtimeRoot + "/" + sid }
-    init(profile: Profile, uid: uid_t) { self.id = profile.id; self.uid = uid; self.status = SessionStatus(id: profile.id, state: "starting", challenge: nil, message: "Запуск OpenVPN", connectedAt: nil) }
+    init(profile: Profile, uid: uid_t) { self.id = profile.id; self.uid = uid; self.status = SessionStatus(id: profile.id, state: "starting", challenge: nil, message: "Starting OpenVPN", connectedAt: nil) }
     func send(_ command: String) throws {
         managementLock.lock(); defer { managementLock.unlock() }
         guard managementFD >= 0 else { throw VPNError("VPN management channel is not ready") }
@@ -134,11 +134,11 @@ final class Session {
         guard !withLock({ canceled }) else { return }
         do {
             if line.hasPrefix(">PASSWORD:Verification Failed:") {
-                withLock { password = nil; keyPassword = nil; status.state = "credentials"; status.challenge = line.contains("Private Key") ? "Private Key" : "Auth"; status.message = "Авторизация отклонена. Введите данные снова." }
+                withLock { password = nil; keyPassword = nil; status.state = "credentials"; status.challenge = line.contains("Private Key") ? "Private Key" : "Auth"; status.message = "Authentication rejected. Enter your credentials again." }
             } else if line.hasPrefix(">PASSWORD:Need '") {
                 let parts = line.components(separatedBy: "'"); guard parts.count >= 2 else { return }; let challenge = parts[1]
-                guard ["Auth", "Private Key", "HTTP Proxy", "SOCKS Proxy"].contains(challenge) else { stop(failure: "Этот способ авторизации требует дополнительной поддержки"); return }
-                withLock { status.challenge = challenge; status.state = "credentials"; status.message = challenge == "Auth" ? "Нужны логин и пароль VPN" : "Нужен пароль сертификата" }
+                guard ["Auth", "Private Key", "HTTP Proxy", "SOCKS Proxy"].contains(challenge) else { stop(failure: "This authentication method requires additional support"); return }
+                withLock { status.challenge = challenge; status.state = "credentials"; status.message = challenge == "Auth" ? "VPN username and password required" : "Certificate password required" }
                 if challenge.contains("Proxy") { withLock { username = nil; password = nil } }
                 else if let range = line.range(of: " SC:") { withLock { status.challengeText = String(line[range.upperBound...]); password = nil } }
                 else { try answer(challenge) }
@@ -159,24 +159,24 @@ final class Session {
                         if state == "CONNECTED" {
                             let file = URL(fileURLWithPath: directory + "/dns-ready.json")
                             guard let data = try? Data(contentsOf: file), let dns = try? JSONDecoder().decode(DNSState.self, from: data), !requireDNS || !dns.rules.isEmpty else {
-                                stop(failure: "Split DNS не настроен. Проверьте серверные DNS-параметры или правила снимка Windows."); return
+                                stop(failure: "Split DNS is not configured. Check the server DNS settings or imported Windows DNS rules."); return
                             }
-                            status.state = "connected"; status.challenge = nil; status.message = dns.rules.isEmpty ? "VPN подключён" : "VPN подключён · Split DNS активен"; status.connectedAt = Date()
+                            status.state = "connected"; status.challenge = nil; status.message = dns.rules.isEmpty ? "VPN connected" : "VPN connected · Split DNS active"; status.connectedAt = Date()
                             status.interface = dns.interface; status.address = dns.address ?? (parts.count > 3 ? String(parts[3]) : nil); status.dns = dns.rules
                             status.remoteAddress = parts.count > 4 ? String(parts[4]) : nil; status.errorCode = nil
                         }
                         else if state == "RECONNECTING" {
                             status.state = "reconnecting"
-                            status.message = parts.count > 2 && !parts[2].isEmpty ? "Повторное подключение: " + logLineRedacted(String(parts[2]), secrets: secretValues) : "Восстановление соединения"
+                            status.message = parts.count > 2 && !parts[2].isEmpty ? "Reconnecting: " + logLineRedacted(String(parts[2]), secrets: secretValues) : "Reconnecting"
                         }
                         else if state != "EXITING", status.challenge == nil {
                             status.state = "connecting"
-                            status.message = ["RESOLVE": "Определение адреса VPN-сервера", "TCP_CONNECT": "Соединение с VPN-сервером", "WAIT": "Ожидание ответа VPN-сервера", "AUTH": "Проверка авторизации и сертификата", "AUTH_PENDING": "Ожидание подтверждения авторизации", "GET_CONFIG": "Получение настроек от сервера", "ASSIGN_IP": "Настройка адреса VPN", "ADD_ROUTES": "Настройка маршрутов и DNS"][state] ?? "Установка защищённого соединения"
+                            status.message = ["RESOLVE": "Resolving the VPN server address", "TCP_CONNECT": "Connecting to the VPN server", "WAIT": "Waiting for the VPN server to respond", "AUTH": "Verifying credentials and certificate", "AUTH_PENDING": "Waiting for authentication approval", "GET_CONFIG": "Receiving settings from the server", "ASSIGN_IP": "Configuring the VPN address", "ADD_ROUTES": "Configuring routes and DNS"][state] ?? "Establishing a secure connection"
                         }
                     }
                 }
-            } else if line.hasPrefix(">FATAL:") { withLock { status.state = "error"; status.message = "OpenVPN завершился с ошибкой. Проверьте профиль, сертификат и настройки DNS."; failureMessage = status.message } }
-        } catch { stop(failure: "Ошибка канала управления VPN") }
+            } else if line.hasPrefix(">FATAL:") { withLock { status.state = "error"; status.message = "OpenVPN exited with an error. Check the profile, certificate and DNS settings."; failureMessage = status.message } }
+        } catch { stop(failure: "VPN management channel error") }
     }
     func start(_ request: Request) throws {
         guard let profile = request.profile, let ca = request.ca, let p12 = request.p12, ca.count <= 100_000, (1...500_000).contains(p12.count), String(data: ca, encoding: .utf8)?.contains("-----BEGIN CERTIFICATE-----") == true else { throw VPNError("Missing VPN certificates") }
@@ -211,12 +211,12 @@ final class Session {
             guard let self else { return }
             output.fileHandleForReading.readabilityHandler = nil
             self.managementLock.lock(); if self.managementFD >= 0 { shutdown(self.managementFD, SHUT_RDWR); close(self.managementFD); self.managementFD = -1 }; self.managementLock.unlock()
-            do { try removeDNS(self.sid) } catch { withLock { self.failureMessage = "Не удалось удалить DNS-политику. Перезапустите службу и проверьте DNS." } }
+            do { try removeDNS(self.sid) } catch { withLock { self.failureMessage = "Could not remove the DNS policy. Restart the service and check DNS." } }
             try? fm.removeItem(atPath: self.directory)
             withLock { self.password = nil; self.keyPassword = nil; self.status.challenge = nil; self.status.connectedAt = nil; self.status.rateIn = 0; self.status.rateOut = 0; self.secretValues = []
                 if let failure = self.failureMessage { self.status.state = "error"; self.status.message = failure }
-                else if self.canceled { self.status.state = "disconnected"; self.status.message = "Отключено" }
-                else { self.status.state = "error"; self.status.message = "Соединение завершено (код \(p.terminationStatus)). Проверьте авторизацию и настройки." }
+                else if self.canceled { self.status.state = "disconnected"; self.status.message = "Disconnected" }
+                else { self.status.state = "error"; self.status.message = "Connection ended (code \(p.terminationStatus)). Check credentials and settings." }
             }
         }
         try credentials(request)
@@ -235,13 +235,13 @@ final class Session {
                 var timeout = timeval(tv_sec: 0, tv_usec: 0); setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
                 try self.send("state on"); try self.send("bytecount 1"); try self.send("hold release")
                 while self.process.isRunning { let line = try readFrame(fd); if let text = String(data: line, encoding: .utf8) { self.handle(text) } }
-            } catch { if self.process.isRunning && !withLock({ self.canceled }) { self.stop(failure: "Не удалось управлять OpenVPN") } }
+            } catch { if self.process.isRunning && !withLock({ self.canceled }) { self.stop(failure: "Could not control OpenVPN") } }
         }
     }
     func stop(failure: String? = nil) {
         let shouldStop = withLock { () -> Bool in
             guard !canceled else { return false }
-            canceled = true; failureMessage = failure; password = nil; keyPassword = nil; status.state = "disconnecting"; status.message = "Отключение и очистка DNS"
+            canceled = true; failureMessage = failure; password = nil; keyPassword = nil; status.state = "disconnecting"; status.message = "Disconnecting and cleaning up DNS"
             if let failure { appendLog("OpenVPNUI: " + failure) }
             return true
         }
@@ -249,7 +249,7 @@ final class Session {
         if process.isRunning {
             process.terminate()
             DispatchQueue.global().asyncAfter(deadline: .now() + 5) { [weak self] in guard let self else { return }; if self.process.isRunning { kill(self.process.processIdentifier, SIGKILL) } }
-        } else { try? removeDNS(sid); try? fm.removeItem(atPath: directory); withLock { status.state = failureMessage == nil ? "disconnected" : "error"; status.message = failureMessage ?? "Отключено" } }
+        } else { try? removeDNS(sid); try? fm.removeItem(atPath: directory); withLock { status.state = failureMessage == nil ? "disconnected" : "error"; status.message = failureMessage ?? "Disconnected" } }
     }
 }
 
@@ -279,7 +279,7 @@ func userHasAccess(_ uid: uid_t) -> Bool {
 func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
     try withLock {
         lastClientSeen = Date()
-        if request.action == "access" { return Response(ok: true, sessions: [], groups: localGroups(), accessPolicy: loadAccessPolicy(), helperVersion: "0.2.1") }
+        if request.action == "access" { return Response(ok: true, sessions: [], groups: localGroups(), accessPolicy: loadAccessPolicy(), helperVersion: "0.2.2") }
         if request.action == "set-access" {
             try verifyAdministratorAuthorization(request.authorization)
             guard let policy = request.accessPolicy, policy.groups.count <= 128, policy.groups.allSatisfy({ localGroups().contains($0) }) else { throw VPNError("Unknown group") }
@@ -293,8 +293,8 @@ func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
             DispatchQueue.global().asyncAfter(deadline: .now() + 6) { exit(0) }
             return Response(ok: true, sessions: [])
         }
-        guard userHasAccess(uid) else { throw VPNError("Вашей группе не разрешено управление VPN. Измените доступ в настройках службы.") }
-        if request.action == "status" { return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status).sorted { $0.id < $1.id }, engine: "OpenVPN 2.6.23", helperVersion: "0.2.1") }
+        guard userHasAccess(uid) else { throw VPNError("Your group is not allowed to manage VPN connections. Change access in the service settings.") }
+        if request.action == "status" { return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status).sorted { $0.id < $1.id }, engine: "OpenVPN 2.6.23", helperVersion: "0.2.2") }
         guard let id = request.id, safeID(id) else { throw VPNError("Invalid profile identifier") }
         if request.action == "start" {
             guard request.profile?.id == id, ownerUID == nil || ownerUID == uid else { throw VPNError("VPN is in use by another Mac user") }
@@ -309,7 +309,7 @@ func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
             else if request.action == "credentials" { try session.credentials(request) }
             else { throw VPNError("Unknown action") }
         }
-        return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status), engine: "OpenVPN 2.6.23", helperVersion: "0.2.1")
+        return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status), engine: "OpenVPN 2.6.23", helperVersion: "0.2.2")
     }
 }
 
@@ -350,7 +350,7 @@ func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
                     defer { close(fd) }; var timeout = timeval(tv_sec: 5, tv_usec: 0); setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size)); setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
                     let response: Response
                     do { let uid = try authorizedUID(fd); let request = try JSONDecoder().decode(Request.self, from: readFrame(fd)); response = try handleRequest(request, uid: uid) }
-                    catch { response = Response(ok: false, error: (error as? VPNError)?.text ?? "Ошибка обработки локального запроса", sessions: [], engine: nil) }
+                    catch { response = Response(ok: false, error: (error as? VPNError)?.text ?? "Could not process the local request", sessions: [], engine: nil) }
                     if var data = try? JSONEncoder().encode(response) { data.append(10); try? writeAll(fd, data) }
                 }
             }

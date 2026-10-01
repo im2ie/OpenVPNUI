@@ -9,6 +9,8 @@ Files.swift
 Helper.swift
 HelperTests.swift
 LICENSE
+Localization.swift
+LocalizationTests.swift
 README.md
 README.ru.md
 RELEASE_NOTES.md
@@ -16,6 +18,7 @@ SOURCE_FILES.txt
 Shared.swift
 THIRD_PARTY_NOTICES.md
 Tests.swift
+Translations.swift
 VALIDATION.json
 Vault.swift
 build.sh
@@ -36,7 +39,10 @@ scripts/bundle_legacy.py
 scripts/check_upstream.py
 scripts/prepare_import.py
 scripts/publish_release.py
+scripts/render_localizations.sh
 scripts/validate_release.py
+tests/RenderLocalization.swift
+tests/check_localizations.py
 tests/validate_crypto.py
 upstream/SHA256SUMS.txt
 upstream/lz4-1.10.0.tar.gz
