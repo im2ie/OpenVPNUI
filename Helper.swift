@@ -130,8 +130,11 @@ final class Session {
             withLock { if !retainKey { keyPassword = nil }; status.challenge = nil; status.state = "connecting" }
         }
     }
-    func handle(_ line: String) {
+    func handle(_ frame: String) {
         guard !withLock({ canceled }) else { return }
+        // OpenVPN terminates management messages with CRLF; readFrame consumes LF.
+        // Remove only the framing CR, preserving spaces in challenges and messages.
+        let line = frame.hasSuffix("\r") ? String(frame.dropLast()) : frame
         do {
             if line.hasPrefix(">PASSWORD:Verification Failed:") {
                 withLock { password = nil; keyPassword = nil; status.state = "credentials"; status.challenge = line.contains("Private Key") ? "Private Key" : "Auth"; status.message = "Authentication rejected. Enter your credentials again." }
@@ -143,7 +146,7 @@ final class Session {
                 else if let range = line.range(of: " SC:") { withLock { status.challengeText = String(line[range.upperBound...]); password = nil } }
                 else { try answer(challenge) }
             } else if line.hasPrefix(">BYTECOUNT:") {
-                let values = line.dropFirst(11).split(separator: ",")
+                let values = line.dropFirst(11).split(separator: ",", omittingEmptySubsequences: false)
                 if values.count == 2, let incoming = UInt64(values[0]), let outgoing = UInt64(values[1]) {
                     withLock {
                         let now = Date()
@@ -279,7 +282,7 @@ func userHasAccess(_ uid: uid_t) -> Bool {
 func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
     try withLock {
         lastClientSeen = Date()
-        if request.action == "access" { return Response(ok: true, sessions: [], groups: localGroups(), accessPolicy: loadAccessPolicy(), helperVersion: "0.2.3") }
+        if request.action == "access" { return Response(ok: true, sessions: [], groups: localGroups(), accessPolicy: loadAccessPolicy(), helperVersion: "0.2.4") }
         if request.action == "set-access" {
             try verifyAdministratorAuthorization(request.authorization)
             guard let policy = request.accessPolicy, policy.groups.count <= 128, policy.groups.allSatisfy({ localGroups().contains($0) }) else { throw VPNError("Unknown group") }
@@ -294,7 +297,7 @@ func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
             return Response(ok: true, sessions: [])
         }
         guard userHasAccess(uid) else { throw VPNError("Your group is not allowed to manage VPN connections. Change access in the service settings.") }
-        if request.action == "status" { return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status).sorted { $0.id < $1.id }, engine: "OpenVPN 2.6.23", helperVersion: "0.2.3") }
+        if request.action == "status" { return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status).sorted { $0.id < $1.id }, engine: "OpenVPN 2.6.23", helperVersion: "0.2.4") }
         guard let id = request.id, safeID(id) else { throw VPNError("Invalid profile identifier") }
         if request.action == "start" {
             guard request.profile?.id == id, ownerUID == nil || ownerUID == uid else { throw VPNError("VPN is in use by another Mac user") }
@@ -309,7 +312,7 @@ func handleRequest(_ request: Request, uid: uid_t) throws -> Response {
             else if request.action == "credentials" { try session.credentials(request) }
             else { throw VPNError("Unknown action") }
         }
-        return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status), engine: "OpenVPN 2.6.23", helperVersion: "0.2.3")
+        return Response(ok: true, error: nil, sessions: sessions.values.filter { $0.uid == uid }.map(\.status), engine: "OpenVPN 2.6.23", helperVersion: "0.2.4")
     }
 }
 

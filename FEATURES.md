@@ -8,7 +8,7 @@ limitations are listed in README; this table does not certify interoperability w
 |---|---|---|
 | Interface language | English default, optional Ukrainian, persistent in-app selection | Catalog coverage, preferences and ru-to-uk migration, helper message and interpolation tests |
 | Connect, disconnect, cancel, credentials, errors | AppModel + helper management channel | Offline management tests; server pending |
-| Connection IP, interface, DNS, traffic, elapsed state | SessionStatus + ConnectionView | Byte counters tested; live tunnel pending |
+| Connection IP, interface, DNS, traffic, elapsed state | SessionStatus + ConnectionView | CRLF/LF socket frames, totals/rates, 64-bit counters, resets and per-session isolation tested; live tunnel pending |
 | Show/hide, copy/clear connection log | bounded root log + ConnectionView | Redaction/bounds tested |
 | Tray states, show window, exit, state notification | MenuBarExtra + notification delegate | Compiled; interactive pending |
 | Import native connection package | ZIP config.xml/DataContract parser | Round-trip/XML tests |

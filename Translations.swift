@@ -302,7 +302,7 @@ let ukrainianTranslations: [String: String] = [
     "Unsupported DNS transport, port or required DNSSEC": "Не підтримується транспорт, порт DNS або обов’язковий DNSSEC",
     "Unsupported VPN option: {0}": "Непідтримуваний параметр VPN: {0}",
     "Unsupported inline block: {0}": "Непідтримуваний вбудований блок: {0}",
-    "Update the system service using the version 0.2.3 installer.": "Оновіть системну службу за допомогою інсталятора версії 0.2.3.",
+    "Update the system service using the version 0.2.4 installer.": "Оновіть системну службу за допомогою інсталятора версії 0.2.4.",
     "Upload": "Відвантаження",
     "Use custom DNS rules": "Використовувати власні правила DNS",
     "Use rules from Windows migration": "Взяти правила з перенесення Windows",

@@ -3,7 +3,11 @@ import Darwin
 
 func check(_ value: Bool, _ message: String) throws { if !value { throw VPNError(message) } }
 @main struct HelperTests {
-    static func main() throws {
+    static func main() {
+        do { try run() }
+        catch { fputs("FAIL: \(error)\n", stderr); exit(1) }
+    }
+    static func run() throws {
         let profile = Profile(id: "test", name: "test", configuration: "", dnsRules: [], useSnapshotDNS: false)
         let session = Session(profile: profile, uid: getuid())
         var descriptors = [Int32](repeating: -1, count: 2)
@@ -34,8 +38,33 @@ func check(_ value: Bool, _ message: String) throws { if !value { throw VPNError
         let proxyUser = String(decoding: try readFrame(descriptors[1]), as: UTF8.self); let proxyPassword = String(decoding: try readFrame(descriptors[1]), as: UTF8.self)
         try check(proxyUser.contains("\"HTTP Proxy\" \"proxy-user\"") && proxyPassword.contains("\"HTTP Proxy\" \"proxy-password\""), "Proxy credentials use separate management realm")
         try check(session.password == nil, "Proxy password must not become VPN password")
-        session.handle(">BYTECOUNT:1024,2048"); session.lastBytes = (1024, 2048, Date().addingTimeInterval(-1)); session.handle(">BYTECOUNT:2048,4096")
-        try check(session.status.bytesIn == 2048 && session.status.bytesOut == 4096 && (session.status.rateIn ?? 0) > 900, "Traffic statistics")
+        // Exercise the actual framing path: OpenVPN emits CRLF, readFrame consumes LF.
+        func receiveManagement(_ frame: String, for target: Session) throws {
+            try writeAll(descriptors[1], Data(frame.utf8))
+            target.handle(String(decoding: try readFrame(descriptors[0]), as: UTF8.self))
+        }
+        try receiveManagement(">BYTECOUNT:1024,2048\r\n", for: session)
+        try check(session.status.bytesIn == 1024 && session.status.bytesOut == 2048, "CRLF management frames must populate both traffic counters")
+        session.lastBytes = (1024, 2048, Date().addingTimeInterval(-2))
+        try receiveManagement(">BYTECOUNT:3072,6144\r\n", for: session)
+        try check((session.status.rateIn ?? 0) > 512 && (session.status.rateOut ?? 0) > 1024, "CRLF traffic updates must calculate both transfer rates")
+        let response = Response(ok: true, sessions: [session.status])
+        let decoded = try JSONDecoder().decode(Response.self, from: JSONEncoder().encode(response)).sessions[0]
+        try check(decoded.bytesIn == 3072 && decoded.bytesOut == 6144 && decoded.rateIn == session.status.rateIn && decoded.rateOut == session.status.rateOut, "Traffic survives the helper-to-app response")
+        let other = Session(profile: Profile(id: "other", name: "other", configuration: "", dnsRules: [], useSnapshotDNS: false), uid: getuid())
+        try receiveManagement(">BYTECOUNT:4294967296,8589934592\r\n", for: other)
+        try check(other.status.bytesIn == 4294967296 && other.status.bytesOut == 8589934592 && session.status.bytesIn == 3072, "Concurrent sessions keep separate 64-bit counters")
+        try receiveManagement(">BYTECOUNT:3072,6144\n", for: session)
+        try check(session.status.rateIn == 0 && session.status.rateOut == 0, "LF frames remain supported and idle traffic has zero speed")
+        for frame in [">BYTECOUNT:bad,4\r\n", ">BYTECOUNT:3,-4\r\n", ">BYTECOUNT:3,\r\n", ">BYTECOUNT:3,,4\r\n", ">BYTECOUNT:3,4,5\r\n", ">BYTECOUNT:18446744073709551616,4\r\n"] {
+            try receiveManagement(frame, for: session)
+            try check(session.status.bytesIn == 3072 && session.status.bytesOut == 6144, "Malformed traffic updates must preserve the last valid counters")
+        }
+        try receiveManagement(">BYTECOUNT:0,0\r\n", for: session)
+        try check(session.status.bytesIn == 0 && session.status.bytesOut == 0 && session.status.rateIn == 0 && session.status.rateOut == 0, "Counter reset must not underflow transfer rates")
+        session.lastBytes = (0, 0, Date().addingTimeInterval(-2))
+        try receiveManagement(">BYTECOUNT:2048,4096\r\n", for: session)
+        try check((session.status.rateIn ?? 0) > 512 && (session.status.rateOut ?? 0) > 1024, "Rates recover after a counter reset")
         session.status.challenge = nil
         session.handle(">STATE:123,WAIT,,,,,,")
         try check(session.status.message == "Waiting for the VPN server to respond", "Show the current connection phase")
@@ -57,6 +86,6 @@ func check(_ value: Bool, _ message: String) throws { if !value { throw VPNError
         for _ in 0..<2100 { session.appendLog(String(repeating: "x", count: 512)) }
         try check(session.log.count <= 2000 && session.logBytes <= 500_000, "Bounded log fits IPC frame")
         do { try verifyAdministratorAuthorization(nil); throw VPNError("Missing admin authorization accepted") } catch let failure as VPNError { try check(failure.text == "Administrator authorization required", "Admin operation must require authorization") }
-        print("PASS: management auth, key prompts, retry, one-time/session retention, static challenge, traffic, live pipe logs, connection phases, original shutdown errors, bounded redacted log, admin authorization requirement")
+        print("PASS: management auth, key prompts, retry, one-time/session retention, static challenge, CRLF/LF traffic frames, transfer rates, 64-bit session isolation, counter resets, malformed samples, helper response serialization, live pipe logs, connection phases, original shutdown errors, bounded redacted log, admin authorization requirement")
     }
 }

@@ -1,4 +1,4 @@
-# OpenVPNUI Mac 0.2.3
+# OpenVPNUI Mac 0.2.4
 
 [Українською](README.uk.md)
 
@@ -9,7 +9,7 @@ workflows in [OpenVPNUI](https://github.com/esptl/OpenVPNUI), reference commit
 
 ## Install
 
-Download [OpenVPNUI-Mac-Intel-0.2.3.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.3/OpenVPNUI-Mac-Intel-0.2.3.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.3). It installs the application, a launchd helper,
+Download [OpenVPNUI-Mac-Intel-0.2.4.pkg](https://github.com/im2ie/OpenVPNUI/releases/download/v0.2.4/OpenVPNUI-Mac-Intel-0.2.4.pkg) from the [release page](https://github.com/im2ie/OpenVPNUI/releases/tag/v0.2.4). It installs the application, a launchd helper,
 and a bundled OpenVPN engine. Homebrew is not required to run the application.
 Installation requires administrator authorization and restarts the helper, which
 interrupts any tunnels managed by a previous version. Existing user profiles are
@@ -136,6 +136,13 @@ The release checker verifies signatures, architecture and bundled dependencies.
 These checks do not establish compatibility with every server, MFA flow, DNS
 policy, sleep/wake scenario or macOS authorization dialog. See `VALIDATION.json`
 for the prepared release's actual checks and remaining limits.
+
+Version 0.2.4 fixes traffic totals and transfer rates staying at zero. OpenVPN
+management messages end in CRLF; the helper now removes the trailing carriage
+return before parsing numbers. Regression tests use Unix socket frames and cover
+both directions, 64-bit counters, separate sessions, idle periods and resets.
+Install the complete `.pkg` to update the helper; replacing only the app does not
+apply this fix. Live corporate VPN connections were not used for these tests.
 
 Version 0.2.3 replaces the Russian option with Ukrainian while keeping English
 as the default. A saved Russian preference from 0.2.2 migrates to Ukrainian; an

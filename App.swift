@@ -34,7 +34,7 @@ struct MainView: View {
         } detail: {
             VStack(spacing: 0) {
                 if !model.helperAvailable { Label(model.serviceError.isEmpty ? L("Service unavailable — install the .pkg package") : Localization.message(model.serviceError), systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange).padding(12).frame(maxWidth: .infinity, alignment: .leading).background(.orange.opacity(0.07)) }
-                if !model.helperVersion.isEmpty && model.helperVersion != "0.2.3" { Text(L("Update the system service using the version 0.2.3 installer.")).foregroundStyle(.orange).padding(8) }
+                if !model.helperVersion.isEmpty && model.helperVersion != "0.2.4" { Text(L("Update the system service using the version 0.2.4 installer.")).foregroundStyle(.orange).padding(8) }
                 switch model.page {
                 case "certificates": CertificatesView(model: model)
                 case "requests": RequestsView(model: model)
@@ -278,7 +278,7 @@ struct SettingsView: View {
                 }
                 GroupBox(L("About")) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("OpenVPNUI Mac 0.2.3 · Intel x86_64").font(.headline)
+                        Text("OpenVPNUI Mac 0.2.4 · Intel x86_64").font(.headline)
                         Text(model.engine + L(" · system service ") + model.helperVersion)
                         Link(L("Original OpenVPNUI project"), destination: URL(string: "https://github.com/esptl/OpenVPNUI")!)
                         Button(L("Component licenses")) { if let url = Bundle.main.resourceURL?.appendingPathComponent("Licenses") { NSWorkspace.shared.open(url) } }

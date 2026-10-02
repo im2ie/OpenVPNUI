@@ -13,7 +13,7 @@ import SwiftUI
         let model = AppModel(preview: true)
         let profile = Profile(id: "example", name: "Example VPN", configuration: "client\ndev tun\nremote vpn.example.test 1194\n", dnsRules: [], useSnapshotDNS: false)
         model.store.profiles = [profile]; model.selected = profile.id
-        model.helperAvailable = true; model.helperVersion = "0.2.3"
+        model.helperAvailable = true; model.helperVersion = "0.2.4"
         model.groups = ["admin", "staff"]; model.allowedGroups = ["admin"]
         model.interfaces = "utun0"
         model.statuses[profile.id] = SessionStatus(id: profile.id, state: "disconnected", message: "Disconnected")
